@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:macro name="uvot_robot_core"
+               params="robot_type:=omni exploded:=false chassis_colour:=yellow">
+
+    <!-- Common physical structure -->
+    <xacro:uvot_common_structure
+        chassis_colour="${chassis_colour}"
+        exploded="${exploded}"/>
+
+    <!-- Configuration-dependent locomotion -->
+    <xacro:if value="${robot_type == 'omni'}">
+      <xacro:omni_locomotion/>
+    </xacro:if>
+
+    <xacro:if value="${robot_type == 'skid'}">
+      <xacro:skid_locomotion/>
+    </xacro:if>
+
+    <xacro:if value="${robot_type == 'diff'}">
+      <xacro:diff_locomotion/>
+    </xacro:if>
+
+    <!-- Common sensors -->
+    <xacro:uvot_sensors exploded="${exploded}"/>
+
+  </xacro:macro>
+
+</robot>

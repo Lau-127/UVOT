@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:macro name="four_motors">
+    <xacro:cylinder_component cylinder_name="motor1" pos_x="-0.085" pos_y="0.0825" pos_z="0.022" rpy_x="${pi/2}" rpy_y="0" rpy_z="0" colour="dark_grey" length_size="0.0648" radius_size="0.0123" mass_value="0.10"/>
+    <xacro:cylinder_component cylinder_name="motor2" pos_x="-0.085" pos_y="-0.0825" pos_z="0.022" rpy_x="${-pi/2}" rpy_y="0" rpy_z="0" colour="dark_grey" length_size="0.0648" radius_size="0.0123" mass_value="0.10"/>
+    <xacro:cylinder_component cylinder_name="motor3" pos_x="0.085" pos_y="-0.0825" pos_z="0.022" rpy_x="${-pi/2}" rpy_y="0" rpy_z="0" colour="dark_grey" length_size="0.0648" radius_size="0.0123" mass_value="0.10"/>
+    <xacro:cylinder_component cylinder_name="motor4" pos_x="0.085" pos_y="0.0825" pos_z="0.022" rpy_x="${pi/2}" rpy_y="0" rpy_z="0" colour="dark_grey" length_size="0.0648" radius_size="0.0123" mass_value="0.10"/>
+  </xacro:macro>
+
+  <xacro:macro name="two_rear_motors">
+    <xacro:cylinder_component cylinder_name="motor1" pos_x="-0.085" pos_y="0.0825" pos_z="0.022" rpy_x="${pi/2}" rpy_y="0" rpy_z="0" colour="dark_grey" length_size="0.0648" radius_size="0.0123" mass_value="0.10"/>
+    <xacro:cylinder_component cylinder_name="motor2" pos_x="-0.085" pos_y="-0.0825" pos_z="0.022" rpy_x="${-pi/2}" rpy_y="0" rpy_z="0" colour="dark_grey" length_size="0.0648" radius_size="0.0123" mass_value="0.10"/>
+  </xacro:macro>
+
+  <xacro:macro name="omni_locomotion">
+    <xacro:property name="wheel_offset" value="${0.035 if exploded_view else 0.0}"/>
+    <xacro:four_motors/>
+
+    <xacro:mecanum_wheel wheel_name="wheel1" position="left"  pos_x="-0.08" pos_y="0.1"  pos_z="0.022" rpy_x="${-pi/2}" rpy_y="0" rpy_z="0" colour="rubber_grey" exploded_y="${wheel_offset}" use_cylinder_collision="true"/>
+    <xacro:mecanum_wheel wheel_name="wheel2" position="right" pos_x="-0.08" pos_y="-0.1" pos_z="0.022" rpy_x="${-pi/2}" rpy_y="0" rpy_z="0" colour="rubber_grey" exploded_y="${-wheel_offset}" use_cylinder_collision="true"/>
+    <xacro:mecanum_wheel wheel_name="wheel3" position="right" pos_x="0.08"  pos_y="-0.1" pos_z="0.022" rpy_x="${-pi/2}" rpy_y="0" rpy_z="0" colour="rubber_grey" exploded_y="${-wheel_offset}" use_cylinder_collision="true"/>
+    <xacro:mecanum_wheel wheel_name="wheel4" position="left"  pos_x="0.08"  pos_y="0.1"  pos_z="0.022" rpy_x="${-pi/2}" rpy_y="0" rpy_z="0" colour="rubber_grey" exploded_y="${wheel_offset}" use_cylinder_collision="true"/>
+
+    <xacro:wheel_transmission transmission_name="tran1" joint_name="wheel1_joint" actuator_name="motor1"/>
+    <xacro:wheel_transmission transmission_name="tran2" joint_name="wheel2_joint" actuator_name="motor2"/>
+    <xacro:wheel_transmission transmission_name="tran3" joint_name="wheel3_joint" actuator_name="motor3"/>
+    <xacro:wheel_transmission transmission_name="tran4" joint_name="wheel4_joint" actuator_name="motor4"/>
+  </xacro:macro>
+
+  <xacro:macro name="skid_locomotion">
+    <xacro:property name="wheel_offset" value="${0.035 if exploded_view else 0.0}"/>
+    <xacro:four_motors/>
+
+    <xacro:standard_wheel wheel_name="wheel1" pos_x="-0.08" pos_y="0.1"  pos_z="0.022" rpy_x="${-pi/2}" rpy_y="0" rpy_z="0" colour="rubber_grey" exploded_y="${wheel_offset}"/>
+    <xacro:standard_wheel wheel_name="wheel2" pos_x="-0.08" pos_y="-0.1" pos_z="0.022" rpy_x="${-pi/2}" rpy_y="0" rpy_z="0" colour="rubber_grey" exploded_y="${-wheel_offset}"/>
+    <xacro:standard_wheel wheel_name="wheel3" pos_x="0.08"  pos_y="-0.1" pos_z="0.022" rpy_x="${-pi/2}" rpy_y="0" rpy_z="0" colour="rubber_grey" exploded_y="${-wheel_offset}"/>
+    <xacro:standard_wheel wheel_name="wheel4" pos_x="0.08"  pos_y="0.1"  pos_z="0.022" rpy_x="${-pi/2}" rpy_y="0" rpy_z="0" colour="rubber_grey" exploded_y="${wheel_offset}"/>
+
+    <xacro:wheel_transmission transmission_name="tran1" joint_name="wheel1_joint" actuator_name="motor1"/>
+    <xacro:wheel_transmission transmission_name="tran2" joint_name="wheel2_joint" actuator_name="motor2"/>
+    <xacro:wheel_transmission transmission_name="tran3" joint_name="wheel3_joint" actuator_name="motor3"/>
+    <xacro:wheel_transmission transmission_name="tran4" joint_name="wheel4_joint" actuator_name="motor4"/>
+  </xacro:macro>
+
+  <xacro:macro name="diff_locomotion">
+    <xacro:property name="wheel_offset" value="${0.035 if exploded_view else 0.0}"/>
+    <xacro:property name="caster_offset" value="${0.035 if exploded_view else 0.0}"/>
+    <xacro:four_motors/>
+
+    <xacro:standard_wheel wheel_name="wheel1" pos_x="-0.08" pos_y="0.1"  pos_z="0.022" rpy_x="${-pi/2}" rpy_y="0" rpy_z="0" colour="rubber_grey" exploded_y="${wheel_offset}"/>
+    <xacro:standard_wheel wheel_name="wheel2" pos_x="-0.08" pos_y="-0.1" pos_z="0.022" rpy_x="${-pi/2}" rpy_y="0" rpy_z="0" colour="rubber_grey" exploded_y="${-wheel_offset}"/>
+    <xacro:caster_component caster_name="caster" pos_x="0.090" pos_y="0.0" ball_z="-0.0105" colour="dark_grey" ball_colour="rubber_grey" mass_value="0.026" exploded_x="${caster_offset}"/>
+
+    <xacro:wheel_transmission transmission_name="tran1" joint_name="wheel1_joint" actuator_name="motor1"/>
+    <xacro:wheel_transmission transmission_name="tran2" joint_name="wheel2_joint" actuator_name="motor2"/>
+  </xacro:macro>
+
+</robot>
+

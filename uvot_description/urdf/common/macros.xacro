@@ -1,0 +1,295 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- Middle/top bases -->
+  <xacro:macro name="plate_mesh" params="base_name pos_x pos_y pos_z rpy_x rpy_y rpy_z colour size_x size_y size_z mass_value exploded_z:=0.0">
+    <joint name="${base_name}_joint" type="fixed">
+      <parent link="$(arg robot_ns)/base_link"/>
+      <child link="$(arg robot_ns)/${base_name}_link"/>
+      <origin xyz="${pos_x} ${pos_y} ${pos_z + exploded_z}" rpy="${rpy_x} ${rpy_y} ${rpy_z}"/>
+    </joint>
+
+    <link name="$(arg robot_ns)/${base_name}_link">
+      <visual>
+        <origin xyz="0 0 0.002" rpy="0 0 ${pi/2}"/>
+        <geometry>
+          <mesh filename="${mesh_prefix}/base2_${base_name}.stl" scale="1 1 1"/>
+        </geometry>
+        <material name="${colour}"/>
+      </visual>
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+
+        <mass value="${mass_value}"/>
+
+        <inertia
+          ixx="${mass_value * (size_y*size_y + size_z*size_z) / 12.0}"
+          ixy="0"
+          ixz="0"
+          iyy="${mass_value * (size_x*size_x + size_z*size_z) / 12.0}"
+          iyz="0"
+          izz="${mass_value * (size_x*size_x + size_y*size_y) / 12.0}"/>
+      </inertial>
+    </link>
+  </xacro:macro>
+
+  <!-- Cylinders for motors -->
+  <xacro:macro name="cylinder_component" params="cylinder_name pos_x pos_y pos_z rpy_x rpy_y rpy_z colour length_size radius_size mass_value:=0.005 exploded_z:=0.0">
+    <joint name="${cylinder_name}_joint" type="fixed">
+      <parent link="$(arg robot_ns)/base_link"/>
+      <child link="$(arg robot_ns)/${cylinder_name}_link"/>
+      <origin xyz="${pos_x} ${pos_y} ${pos_z + exploded_z}" rpy="${rpy_x} ${rpy_y} ${rpy_z}"/>
+    </joint>
+
+    <link name="$(arg robot_ns)/${cylinder_name}_link">
+      <visual>
+        <origin xyz="0.0 0.0 ${length_size/2}" rpy="0.0 0.0 0.0"/>
+        <geometry>
+          <cylinder length="${length_size}" radius="${radius_size}"/>
+        </geometry>
+        <material name="${colour}"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 ${length_size/2}" rpy="0 0 0"/>
+        <geometry>
+          <cylinder length="${length_size}" radius="${radius_size}"/>
+        </geometry>
+      </collision>
+
+      <inertial>
+        <origin xyz="0 0 ${length_size/2}" rpy="0 0 0"/>
+
+        <mass value="${mass_value}"/>
+
+        <inertia
+          ixx="${mass_value * (3*radius_size*radius_size + length_size*length_size) / 12.0}"
+          ixy="0"
+          ixz="0"
+          iyy="${mass_value * (3*radius_size*radius_size + length_size*length_size) / 12.0}"
+          iyz="0"
+          izz="${mass_value * radius_size*radius_size / 2.0}"/>
+      </inertial>
+    </link>
+  </xacro:macro>
+
+  <!-- Boxes for components -->
+  <xacro:macro name="box_component" params="box_name pos_x pos_y pos_z rpy_x rpy_y rpy_z colour size_x size_y size_z mass_value:=0.05 exploded_z:=0.0">
+    <joint name="${box_name}_joint" type="fixed">
+      <parent link="$(arg robot_ns)/base_link"/>
+      <child link="$(arg robot_ns)/${box_name}_link"/>
+      <origin xyz="${pos_x} ${pos_y} ${pos_z + exploded_z}" rpy="${rpy_x} ${rpy_y} ${rpy_z}"/>
+    </joint>
+
+    <link name="$(arg robot_ns)/${box_name}_link">
+      <visual>
+        <origin xyz="0.0 0.0 ${size_z/2}" rpy="0.0 0.0 0.0"/>
+        <geometry>
+          <box size="${size_x} ${size_y} ${size_z}"/>
+        </geometry>
+        <material name="${colour}"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 ${size_z/2}" rpy="0 0 0"/>
+        <geometry>
+          <box size="${size_x} ${size_y} ${size_z}"/>
+        </geometry>
+      </collision>
+
+      <inertial>
+        <origin xyz="0 0 ${size_z/2}" rpy="0 0 0"/>
+
+        <mass value="${mass_value}"/>
+
+        <inertia
+          ixx="${mass_value * (size_y*size_y + size_z*size_z) / 12.0}"
+          ixy="0"
+          ixz="0"
+          iyy="${mass_value * (size_x*size_x + size_z*size_z) / 12.0}"
+          iyz="0"
+          izz="${mass_value * (size_x*size_x + size_y*size_y) / 12.0}"/>
+      </inertial>
+    </link>
+  </xacro:macro>
+
+  <!-- Standard wheel -->
+  <xacro:macro name="standard_wheel" params="wheel_name pos_x pos_y pos_z rpy_x rpy_y rpy_z colour:=black length_size:=0.025 radius_size:=0.0375 mass_value:=0.05 exploded_y:=0.0">
+    <joint name="${wheel_name}_joint" type="continuous">
+      <parent link="$(arg robot_ns)/base_link"/>
+      <child link="$(arg robot_ns)/${wheel_name}_link"/>
+      <origin xyz="${pos_x} ${pos_y + exploded_y} ${pos_z}" rpy="${rpy_x} ${rpy_y} ${rpy_z}"/>
+      <axis xyz="0 0 1"/>
+    </joint>
+
+    <link name="$(arg robot_ns)/${wheel_name}_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder length="${length_size}" radius="${radius_size}"/>
+        </geometry>
+        <material name="${colour}"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder length="${length_size}" radius="${radius_size}"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+
+        <mass value="${mass_value}"/>
+
+        <inertia
+          ixx="${mass_value * (3*radius_size*radius_size + length_size*length_size) / 12.0}"
+          ixy="0"
+          ixz="0"
+          iyy="${mass_value * (3*radius_size*radius_size + length_size*length_size) / 12.0}"
+          iyz="0"
+          izz="${mass_value * radius_size*radius_size / 2.0}"/>
+      </inertial>
+    </link>
+  </xacro:macro>
+
+  <!-- Mecanum wheel -->
+  <xacro:macro
+      name="mecanum_wheel"
+      params="wheel_name position pos_x pos_y pos_z
+              rpy_x rpy_y rpy_z
+              colour:=black
+              length_size:=0.025
+              radius_size:=0.04
+              mass_value:=0.10
+              exploded_y:=0.0
+              use_cylinder_collision:=true">
+
+    <joint name="${wheel_name}_joint" type="continuous">
+      <parent link="$(arg robot_ns)/base_link"/>
+      <child link="$(arg robot_ns)/${wheel_name}_link"/>
+
+      <origin
+          xyz="${pos_x} ${pos_y + exploded_y} ${pos_z}"
+          rpy="${rpy_x} ${rpy_y} ${rpy_z}"/>
+
+      <axis xyz="0 0 1"/>
+    </joint>
+
+    <link name="$(arg robot_ns)/${wheel_name}_link">
+
+      <!-- Original STL visual -->
+      <visual>
+        <origin xyz="0 0 0" rpy="0 ${pi} ${-pi/2}"/>
+
+        <geometry>
+          <mesh
+              filename="${mesh_prefix}/${position}_mecanum_wheel.STL"
+              scale="1.2 1.2 1.2"/>
+        </geometry>
+
+        <material name="${colour}"/>
+      </visual>
+
+      <!-- Simplified cylindrical collision -->
+      <xacro:if value="${use_cylinder_collision}">
+        <collision>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+
+          <geometry>
+            <cylinder
+                length="${length_size}"
+                radius="${radius_size}"/>
+          </geometry>
+        </collision>
+      </xacro:if>
+
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+
+        <mass value="${mass_value}"/>
+
+        <inertia
+            ixx="${mass_value * (3*radius_size*radius_size +
+                                length_size*length_size) / 12.0}"
+            ixy="0"
+            ixz="0"
+            iyy="${mass_value * (3*radius_size*radius_size +
+                                length_size*length_size) / 12.0}"
+            iyz="0"
+            izz="${mass_value * radius_size*radius_size / 2.0}"/>
+      </inertial>
+
+    </link>
+
+  </xacro:macro>
+
+  <!-- Caster wheel -->
+  <xacro:macro name="caster_component" params="caster_name pos_x pos_y ball_z:=0.0033 colour:=dark_grey ball_colour:=rubber_grey ball_radius:=0.007 mass_value:=0.026 exploded_x:=0.0">
+
+    <joint name="${caster_name}_joint" type="fixed">
+      <parent link="$(arg robot_ns)/base_link"/>
+      <child link="$(arg robot_ns)/${caster_name}_link"/>
+
+      <origin xyz="${pos_x + exploded_x} ${pos_y} 0"
+              rpy="0 0 0"/>
+    </joint>
+
+    <link name="$(arg robot_ns)/${caster_name}_link">
+
+      <!-- Simplified caster support -->
+      <visual>
+        <origin xyz="0 0 0.0017" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.047 0.0325 0.016"/>
+        </geometry>
+        <material name="${colour}"/>
+      </visual>
+
+      <!-- Ball -->
+      <visual>
+        <origin xyz="0 0 ${ball_z}" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${ball_radius}"/>
+        </geometry>
+        <material name="${ball_colour}"/>
+      </visual>
+
+      <!-- Ground contact -->
+      <collision>
+        <origin xyz="0 0 ${ball_z}" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${ball_radius}"/>
+        </geometry>
+      </collision>
+
+      <!-- Approximate dynamics of complete caster -->
+      <inertial>
+        <origin xyz="0 0 0.012" rpy="0 0 0"/>
+        <mass value="${mass_value}"/>
+
+        <inertia
+          ixx="${mass_value * (0.0325*0.0325 + 0.010*0.010) / 12.0}"
+          ixy="0"
+          ixz="0"
+          iyy="${mass_value * (0.047*0.047 + 0.010*0.010) / 12.0}"
+          iyz="0"
+          izz="${mass_value * (0.047*0.047 + 0.0325*0.0325) / 12.0}"/>
+      </inertial>
+
+    </link>
+  </xacro:macro>
+
+  <xacro:macro name="wheel_transmission" params="transmission_name joint_name actuator_name">
+    <transmission name="${transmission_name}">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${joint_name}">
+        <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="${actuator_name}">
+        <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      </actuator>
+    </transmission>
+  </xacro:macro>
+
+</robot>
+

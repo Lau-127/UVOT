@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<robot name="uvot" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- Arguments -->
+  <xacro:arg name="robot_ns" default="robot"/>
+  <xacro:arg name="robot_type" default="omni"/>
+  <xacro:arg name="exploded" default="false"/>
+
+  <!-- Properties -->
+  <xacro:property name="robot_type" value="$(arg robot_type)"/>
+  <xacro:property name="exploded_view" value="$(arg exploded)"/>
+  <xacro:property name="mesh_prefix" value="package://uvot_description/meshes"/>
+
+  <!-- Common description -->
+  <xacro:include filename="$(find uvot_description)/urdf/common/materials.xacro"/>
+  <xacro:include filename="$(find uvot_description)/urdf/common/macros.xacro"/>
+  <xacro:include filename="$(find uvot_description)/urdf/common/structure.xacro"/>
+  <xacro:include filename="$(find uvot_description)/urdf/common/locomotion.xacro"/>
+  <xacro:include filename="$(find uvot_description)/urdf/common/sensors.xacro"/>
+  <xacro:include filename="$(find uvot_description)/urdf/common/robot_core.xacro"/>
+
+  <!-- Complete physical robot -->
+  <xacro:uvot_robot_core
+      robot_type="${robot_type}"
+      exploded="${exploded_view}"
+      chassis_colour="yellow"/>
+
+</robot>

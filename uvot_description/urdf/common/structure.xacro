@@ -1,0 +1,140 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:macro name="uvot_common_structure" params="chassis_colour:=red exploded:=false">
+
+    <xacro:property name="exploded_middle" value="${0.05 if exploded else 0.0}"/>
+    <xacro:property name="exploded_top" value="${0.10 if exploded else 0.0}"/>
+    <xacro:property name="exploded_electronics" value="${0.05 if exploded else 0.0}"/>
+    <xacro:property name="exploded_sensors" value="${0.12 if exploded else 0.0}"/>
+    <xacro:property name="exploded_aluminium" value="${-0.020 if exploded else 0.0}"/>
+    <xacro:property name="exploded_lower_spacers" value="${0.020 if exploded else 0.0}"/>
+    <xacro:property name="exploded_upper_spacers" value="${0.075 if exploded else 0.0}"/>
+
+    <link name="$(arg robot_ns)/base_footprint"/>
+
+    <joint name="base_joint" type="fixed">
+      <parent link="$(arg robot_ns)/base_footprint"/>
+      <child link="$(arg robot_ns)/base_link"/>
+      <origin xyz="0 0 0.018" rpy="0 0 0"/>
+    </joint>
+
+    <!-- Bottom base-->
+    <link name="$(arg robot_ns)/base_link">
+      <visual>
+        <origin xyz="0 0 0.0035" rpy="0 0 ${pi/2}"/>
+        <geometry>
+          <mesh filename="${mesh_prefix}/Omnibot_bottom_new_plastic.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="${chassis_colour}"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0.05075" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.225 0.2 0.105"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <origin xyz="0 0 0.0065" rpy="0 0 0"/>
+
+        <mass value="0.099"/>
+
+        <inertia
+          ixx="${0.099 * (0.227*0.227 + 0.006*0.006) / 12.0}"
+          ixy="0"
+          ixz="0"
+          iyy="${0.099 * (0.200*0.200 + 0.006*0.006) / 12.0}"
+          iyz="0"
+          izz="${0.099 * (0.200*0.200 + 0.227*0.227) / 12.0}"/>
+      </inertial>
+    </link>
+
+    <!-- Metallic base -->
+    <joint name="base_placa_joint" type="fixed">
+      <parent link="$(arg robot_ns)/base_link"/>
+      <child link="$(arg robot_ns)/base_placa_link"/>
+      <origin xyz="0 0 ${exploded_aluminium}" rpy="0 0 0"/>
+    </joint>
+
+    <link name="$(arg robot_ns)/base_placa_link">
+      <visual>
+        <origin xyz="0 0 0.0035" rpy="0 0 ${pi/2}"/>
+        <geometry>
+          <mesh filename="${mesh_prefix}/Omnibot_bottom_new_metal.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="aluminium"/>
+      </visual>
+      <inertial>
+        <origin xyz="0 0 0.004" rpy="0 0 0"/>
+
+        <mass value="0.135"/>
+
+        <inertia
+          ixx="${0.135 * (0.200*0.200 + 0.001*0.001) / 12.0}"
+          ixy="0"
+          ixz="0"
+          iyy="${0.135 * (0.155*0.155 + 0.001*0.001) / 12.0}"
+          iyz="0"
+          izz="${0.135 * (0.155*0.155 + 0.200*0.200) / 12.0}"/>
+      </inertial>
+    </link>
+
+    <xacro:plate_mesh
+    base_name="middle"
+    pos_x="0.0"
+    pos_y="0.0"
+    pos_z="0.057"
+    rpy_x="0"
+    rpy_y="0"
+    rpy_z="0"
+    colour="${chassis_colour}"
+    size_x="0.200"
+    size_y="0.227"
+    size_z="0.004"
+    mass_value="0.101"
+    exploded_z="${exploded_middle}"/>
+
+  <xacro:plate_mesh
+    base_name="top"
+    pos_x="0.0"
+    pos_y="0.0"
+    pos_z="0.091"
+    rpy_x="0"
+    rpy_y="0"
+    rpy_z="0"
+    colour="${chassis_colour}"
+    size_x="0.200"
+    size_y="0.227"
+    size_z="0.004"
+    mass_value="0.116"
+    exploded_z="${exploded_top}"/>
+
+    <!-- Spacers between the bottom base and the middle base -->
+    <!--xacro:cylinder_component cylinder_name="columnF11" pos_x="0.1065" pos_y="0.0" pos_z="0.007" rpy_x="0" rpy_y="0" rpy_z="0" colour="black" length_size="0.05" radius_size="0.0025" exploded_z="${exploded_lower_spacers}"/-->
+    <xacro:cylinder_component cylinder_name="columnL11" pos_x="0.025" pos_y="-0.0935" pos_z="0.007" rpy_x="0" rpy_y="0" rpy_z="0" colour="black" length_size="0.05" radius_size="0.0025" mass_value="0.002" exploded_z="${exploded_lower_spacers}"/>
+    <xacro:cylinder_component cylinder_name="columnL12" pos_x="-0.025" pos_y="-0.0935" pos_z="0.007" rpy_x="0" rpy_y="0" rpy_z="0" colour="black" length_size="0.05" radius_size="0.0025" mass_value="0.002" exploded_z="${exploded_lower_spacers}"/>
+    <xacro:cylinder_component cylinder_name="columnR11" pos_x="0.025" pos_y="0.0935" pos_z="0.007" rpy_x="0" rpy_y="0" rpy_z="0" colour="black" length_size="0.05" radius_size="0.0025" mass_value="0.002" exploded_z="${exploded_lower_spacers}"/>
+    <xacro:cylinder_component cylinder_name="columnR12" pos_x="-0.025" pos_y="0.0935" pos_z="0.007" rpy_x="0" rpy_y="0" rpy_z="0" colour="black" length_size="0.05" radius_size="0.0025" mass_value="0.002" exploded_z="${exploded_lower_spacers}"/>
+    <xacro:cylinder_component cylinder_name="columnB11" pos_x="-0.1065" pos_y="0.0" pos_z="0.007" rpy_x="0" rpy_y="0" rpy_z="0" colour="black" length_size="0.05" radius_size="0.0025" mass_value="0.002" exploded_z="${exploded_lower_spacers}"/>
+
+    <!-- Spacers between the middle base and the top base -->
+    <xacro:cylinder_component cylinder_name="columnF21" pos_x="0.1065" pos_y="0.0" pos_z="0.051" rpy_x="0" rpy_y="0" rpy_z="0" colour="black" length_size="0.04" radius_size="0.0025" mass_value="0.002" exploded_z="${exploded_upper_spacers}"/>
+    <xacro:cylinder_component cylinder_name="columnL21" pos_x="0.025" pos_y="-0.0935" pos_z="0.051" rpy_x="0" rpy_y="0" rpy_z="0" colour="black" length_size="0.04" radius_size="0.0025" mass_value="0.002" exploded_z="${exploded_upper_spacers}"/>
+    <xacro:cylinder_component cylinder_name="columnL22" pos_x="-0.025" pos_y="-0.0935" pos_z="0.051" rpy_x="0" rpy_y="0" rpy_z="0" colour="black" length_size="0.04" radius_size="0.0025" mass_value="0.002" exploded_z="${exploded_upper_spacers}"/>
+    <xacro:cylinder_component cylinder_name="columnR21" pos_x="0.025" pos_y="0.0935" pos_z="0.051" rpy_x="0" rpy_y="0" rpy_z="0" colour="black" length_size="0.04" radius_size="0.0025" mass_value="0.002" exploded_z="${exploded_upper_spacers}"/>
+    <xacro:cylinder_component cylinder_name="columnR22" pos_x="-0.025" pos_y="0.0935" pos_z="0.051" rpy_x="0" rpy_y="0" rpy_z="0" colour="black" length_size="0.04" radius_size="0.0025" mass_value="0.002" exploded_z="${exploded_upper_spacers}"/>
+    <xacro:cylinder_component cylinder_name="columnB21" pos_x="-0.1065" pos_y="0.0" pos_z="0.051" rpy_x="0" rpy_y="0" rpy_z="0" colour="black" length_size="0.04" radius_size="0.0025" mass_value="0.002" exploded_z="${exploded_upper_spacers}"/>
+
+    <!-- Inner components -->
+    <xacro:box_component box_name="battery" pos_x="0.0" pos_y="0.0" pos_z="0.007" rpy_x="0" rpy_y="0" rpy_z="0" colour="battery_blue" size_x="0.0475" size_y="0.1503" size_z="0.036" mass_value="0.056"/>
+
+    <xacro:box_component box_name="driver_front" pos_x="0.0725" pos_y="0.0" pos_z="0.061" rpy_x="0" rpy_y="0" rpy_z="0" colour="pcb_green" size_x="0.050" size_y="0.050" size_z="0.027" mass_value="0.026" exploded_z="${exploded_electronics}"/>
+    <xacro:box_component box_name="driver_back" pos_x="-0.0725" pos_y="0.0" pos_z="0.061" rpy_x="0" rpy_y="0" rpy_z="0" colour="pcb_green" size_x="0.050" size_y="0.050" size_z="0.027" mass_value="0.026" exploded_z="${exploded_electronics}"/>
+    <xacro:box_component box_name="Raspberry" pos_x="0.0" pos_y="0.055" pos_z="0.061" rpy_x="0" rpy_y="0" rpy_z="0" colour="pcb_green" size_x="0.0886" size_y="0.0574" size_z="0.02" mass_value="0.072" exploded_z="${exploded_electronics}"/>
+    <xacro:box_component box_name="ESP32" pos_x="0.0" pos_y="-0.055" pos_z="0.061" rpy_x="0" rpy_y="0" rpy_z="0" colour="pcb_green" size_x="0.0773" size_y="0.0632" size_z="0.019" mass_value="0.049" exploded_z="${exploded_electronics}"/>
+    <xacro:box_component box_name="IMU" pos_x="0.0" pos_y="0.0" pos_z="0.061" rpy_x="0" rpy_y="0" rpy_z="0" colour="sensor_black" size_x="0.015" size_y="0.030" size_z="0.006" mass_value="0.002" exploded_z="${exploded_electronics}"/>
+    <xacro:box_component box_name="DC_DC" pos_x="0.05" pos_y="0.055" pos_z="0.007" rpy_x="0" rpy_y="0" rpy_z="0" colour="pcb_green" size_x="0.045" size_y="0.050" size_z="0.020" mass_value="0.051"/>
+  </xacro:macro>
+
+</robot>
+

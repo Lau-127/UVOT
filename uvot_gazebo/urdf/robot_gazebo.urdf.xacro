@@ -1,0 +1,140 @@
+<?xml version="1.0"?>
+<robot name="uvot_gazebo" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- Arguments -->
+  <xacro:arg name="robot_ns" default="robot1"/>
+  <xacro:arg name="robot_type" default="omni"/>
+  <xacro:arg name="exploded" default="false"/>
+
+  <!-- Properties -->
+  <xacro:property name="robot_type" value="$(arg robot_type)"/>
+  <xacro:property name="exploded_view" value="$(arg exploded)"/>
+  <xacro:property name="mesh_prefix" value="package://uvot_description/meshes"/>
+
+  <!-- ========================================================= -->
+  <!-- Common physical description                               -->
+  <!-- ========================================================= -->
+  <xacro:include filename="$(find uvot_description)/urdf/common/materials.xacro"/>
+  <xacro:include filename="$(find uvot_description)/urdf/common/macros.xacro"/>
+  <xacro:include filename="$(find uvot_description)/urdf/common/structure.xacro"/>
+  <xacro:include filename="$(find uvot_description)/urdf/common/locomotion.xacro"/>
+  <xacro:include filename="$(find uvot_description)/urdf/common/sensors.xacro"/>
+  <xacro:include filename="$(find uvot_description)/urdf/common/robot_core.xacro"/>
+
+  <!-- Gazebo-specific ros2_control description -->
+  <xacro:include filename="$(find uvot_gazebo)/urdf/ros2_control.xacro"/>
+
+  <!-- ========================================================= -->
+  <!-- Complete physical robot                                   -->
+  <!-- ========================================================= -->
+  <xacro:uvot_robot_core
+      robot_type="${robot_type}"
+      exploded="${exploded_view}"
+      chassis_colour="yellow"/>
+
+  <!-- ========================================================= -->
+  <!-- Omni / Mecanum simulation                                 -->
+  <!-- ========================================================= -->
+  <xacro:if value="${robot_type == 'omni'}">
+
+    <!--
+      The Mecanum wheels keep their visual meshes and physical
+      wheel joints, but planar motion is imposed kinematically
+      by the UVOT plugin.
+
+      Very low wheel-ground friction prevents the cylindrical
+      wheel collisions from fighting against the imposed
+      Mecanum motion.
+    -->
+
+    <gazebo reference="$(arg robot_ns)/wheel1_link">
+      <mu1>0.001</mu1>
+      <mu2>0.001</mu2>
+    </gazebo>
+
+    <gazebo reference="$(arg robot_ns)/wheel2_link">
+      <mu1>0.001</mu1>
+      <mu2>0.001</mu2>
+    </gazebo>
+
+    <gazebo reference="$(arg robot_ns)/wheel3_link">
+      <mu1>0.001</mu1>
+      <mu2>0.001</mu2>
+    </gazebo>
+
+    <gazebo reference="$(arg robot_ns)/wheel4_link">
+      <mu1>0.001</mu1>
+      <mu2>0.001</mu2>
+    </gazebo>
+
+    <!-- UVOT Mecanum kinematic system -->
+    <gazebo>
+      <plugin
+          filename="libuvot_mecanum_kinematic_system.so"
+          name="uvot_gazebo::UVOTMecanumKinematicSystem">
+
+        <!-- Link whose planar velocity is imposed -->
+        <base_link>$(arg robot_ns)/base_footprint</base_link>
+
+        <!-- Effective wheel radius -->
+        <wheel_radius>0.04</wheel_radius>
+
+        <!--
+          Distance from robot centre to wheel:
+            x = 0.08 m
+            y = 0.10 m
+
+          Therefore:
+            lx + ly = 0.18 m
+        -->
+        <lx>0.08</lx>
+        <ly>0.10</ly>
+
+      </plugin>
+    </gazebo>
+
+  </xacro:if>
+
+  <!-- ========================================================= -->
+  <!-- Differential-drive simulation                             -->
+  <!-- ========================================================= -->
+
+  <xacro:if value="${robot_type == 'diff'}">
+
+    <!--
+      Simplified ball caster.
+      It supports the front of the robot, but should not oppose
+      planar motion / rotation.
+    -->
+    <gazebo reference="$(arg robot_ns)/caster_link">
+      <mu1>0.001</mu1>
+      <mu2>0.001</mu2>
+    </gazebo>
+
+  </xacro:if>
+
+  <!-- ========================================================= -->
+  <!-- ros2_control interfaces                                   -->
+  <!-- ========================================================= -->
+  <xacro:uvot_ros2_control robot_type="${robot_type}"/>
+
+  <!-- ========================================================= -->
+  <!-- gz_ros2_control                                           -->
+  <!-- ========================================================= -->
+  <gazebo>
+    <plugin
+        filename="libgz_ros2_control-system.so"
+        name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+
+      <parameters>
+        $(find uvot_gazebo)/config/controllers.yaml
+      </parameters>
+
+      <ros>
+        <namespace>$(arg robot_ns)</namespace>
+      </ros>
+
+    </plugin>
+  </gazebo>
+
+</robot>
