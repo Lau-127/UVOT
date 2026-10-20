@@ -168,23 +168,6 @@ ros2 control list_controllers \
   -c /robot1/controller_manager
 ```
 
-## Validation plan
-
-The planned experimental validation will compare the physical platform and the digital twin using equivalent inputs and measurements.
-
-| Level | Experiment | Omni | Skid | Diff |
-|---|---|:---:|:---:|:---:|
-| Wheels raised | Wheel-speed validation | ✓ | ✓ | ✓ |
-| Open loop | Straight motion | ✓ | ✓ | ✓ |
-| Open loop | Lateral motion | ✓ | — | — |
-| Open loop | In-place rotation | ✓ | ✓ | ✓ |
-| Open loop | Arc / combined motion | ✓ | ✓ | ✓ |
-| Open loop | Diagonal motion | ✓ | — | — |
-| Closed loop | Square trajectory | ✓ | ✓ | ✓ |
-| Navigation | Common map and waypoint sequence | ✓ | ✓ | ✓ |
-
-The real-robot and navigation procedures will be documented once their final implementation and validation are completed.
-
 ## License
 
 Apache-2.0.
