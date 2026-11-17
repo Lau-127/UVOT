@@ -198,59 +198,74 @@ public:
     }
 
 private:
-    void invert5x5(const float A[5][5], float B[5][5]) {
+    bool invert5x5(const float A[5][5], float B[5][5]) {
+
         float aug[5][10];
 
         for (int i = 0; i < 5; ++i) {
             for (int j = 0; j < 5; ++j) {
-                aug[i][j]     = A[i][j];
+                aug[i][j] = A[i][j];
                 aug[i][j + 5] = (i == j) ? 1.0f : 0.0f;
             }
         }
 
         for (int col = 0; col < 5; ++col) {
+
             int pivot = col;
             float maxVal = fabsf(aug[col][col]);
+
             for (int row = col + 1; row < 5; ++row) {
                 float v = fabsf(aug[row][col]);
+
                 if (v > maxVal) {
                     maxVal = v;
                     pivot = row;
                 }
             }
 
-            if (maxVal < 1e-8f) {
-                for (int i = 0; i < 5; ++i)
-                    for (int j = 0; j < 5; ++j)
-                        B[i][j] = (i == j) ? 1.0f : 0.0f;
-                return;
+            // No utilizar una matriz identidad si falla la inversión
+            if (!isfinite(maxVal) || maxVal < 1e-8f) {
+                return false;
             }
 
             if (pivot != col) {
                 for (int j = 0; j < 10; ++j) {
-                    float tmp     = aug[col][j];
-                    aug[col][j]   = aug[pivot][j];
+                    float tmp = aug[col][j];
+                    aug[col][j] = aug[pivot][j];
                     aug[pivot][j] = tmp;
                 }
             }
 
             float pivVal = aug[col][col];
+
             for (int j = 0; j < 10; ++j) {
                 aug[col][j] /= pivVal;
             }
 
             for (int row = 0; row < 5; ++row) {
+
                 if (row == col) continue;
+
                 float factor = aug[row][col];
+
                 for (int j = 0; j < 10; ++j) {
                     aug[row][j] -= factor * aug[col][j];
                 }
             }
         }
 
-        for (int i = 0; i < 5; ++i)
-            for (int j = 0; j < 5; ++j)
+        for (int i = 0; i < 5; ++i) {
+            for (int j = 0; j < 5; ++j) {
+
                 B[i][j] = aug[i][j + 5];
+
+                if (!isfinite(B[i][j])) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 };
 

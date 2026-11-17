@@ -25,3 +25,4 @@ Thumbs.db
 
 # PlatformIO
 .pio/
+uvot_bringup/scripts/
