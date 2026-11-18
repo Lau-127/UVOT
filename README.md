@@ -2,7 +2,7 @@
 
 UVOT is a low-cost, modular and reconfigurable mobile robot platform for research and education.
 
-This repository currently contains the ROS 2 description and Gazebo simulation of the three supported locomotion configurations:
+This repository contains the ESP32 firmware, the ROS 2 packages for the physical robot and the Gazebo simulation of the three supported locomotion configurations:
 
 - **Omnidirectional (`omni`)**: four Mecanum wheels.
 - **Skid-steer (`skid`)**: four conventional driven wheels.
@@ -14,6 +14,7 @@ The current simulation stack targets **Ubuntu 24.04**, **ROS 2 Jazzy** and **Gaz
 
 ```text
 UVOT/
+├── firmware/
 ├── uvot_bringup/
 ├── uvot_description/
 ├── uvot_gazebo/
@@ -25,6 +26,10 @@ UVOT/
 ```
 
 ## Package overview
+
+### `firmware/uvot_esp32`
+
+ESP32 firmware (micro-ROS, motor control and odometry EKF) for the three locomotion configurations.
 
 ### `uvot_description`
 
@@ -84,89 +89,9 @@ source /opt/ros/jazzy/setup.bash
 source ~/ros2_ws/install/setup.bash
 ```
 
-## Gazebo simulation
+## Usage
 
-The three locomotion configurations are selected with the `robot_type` launch argument.
-
-### Omnidirectional / Mecanum
-
-```bash
-ros2 launch uvot_gazebo simulation.launch.py \
-  namespace:=robot1 \
-  robot_type:=omni
-```
-
-### Skid-steer
-
-```bash
-ros2 launch uvot_gazebo simulation.launch.py \
-  namespace:=robot1 \
-  robot_type:=skid
-```
-
-### Differential drive
-
-```bash
-ros2 launch uvot_gazebo simulation.launch.py \
-  namespace:=robot1 \
-  robot_type:=diff
-```
-
-The simulation launch automatically starts the joint state broadcaster and the drive controller corresponding to the selected configuration.
-
-## Manual simulation commands
-
-### Omnidirectional: longitudinal motion
-
-```bash
-ros2 topic pub --once \
-  /robot1/mecanum_controller/reference \
-  geometry_msgs/msg/TwistStamped \
-  "{twist: {linear: {x: 0.1, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}}"
-```
-
-### Omnidirectional: lateral motion
-
-```bash
-ros2 topic pub --once \
-  /robot1/mecanum_controller/reference \
-  geometry_msgs/msg/TwistStamped \
-  "{twist: {linear: {x: 0.0, y: 0.1, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}}"
-```
-
-### Omnidirectional: rotation
-
-```bash
-ros2 topic pub --once \
-  /robot1/mecanum_controller/reference \
-  geometry_msgs/msg/TwistStamped \
-  "{twist: {linear: {x: 0.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.2}}}"
-```
-
-### Skid-steer: longitudinal motion
-
-```bash
-ros2 topic pub --once \
-  /robot1/skid_controller/cmd_vel \
-  geometry_msgs/msg/TwistStamped \
-  "{twist: {linear: {x: 0.1, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}}"
-```
-
-### Differential drive: longitudinal motion
-
-```bash
-ros2 topic pub --once \
-  /robot1/diff_controller/cmd_vel \
-  geometry_msgs/msg/TwistStamped \
-  "{twist: {linear: {x: 0.1, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}}"
-```
-
-## Check active controllers
-
-```bash
-ros2 control list_controllers \
-  -c /robot1/controller_manager
-```
+All the commands to run the platform, both on the physical robot (ESP32 firmware, micro-ROS, bringup, Nav2) and in Gazebo simulation (launch, motion commands, teleoperation), are collected in [COMMANDS.md](COMMANDS.md).
 
 ## License
 

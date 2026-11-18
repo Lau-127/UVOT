@@ -68,10 +68,18 @@ Use `robot_type:=skid` or `robot_type:=omni` as required.
 The simulation does not need the micro-ROS agent or `robot.launch.py`: the Gazebo launch starts `robot_state_publisher`, `ros2_control` and the bridges.
 
 ```bash
-ros2 launch uvot_gazebo simulation.launch.py robot_type:=diff
+ros2 launch uvot_gazebo simulation.launch.py \
+  namespace:=robot1 \
+  robot_type:=diff
 ```
 
 Use `robot_type:=skid` or `robot_type:=omni` for the other locomotion configurations.
+
+The launch starts the joint state broadcaster and the drive controller of the selected configuration. Check that it is active:
+
+```bash
+ros2 control list_controllers -c /robot1/controller_manager
+```
 
 ### Move the robot
 
@@ -96,6 +104,13 @@ Omni (the topic is `reference`; `linear.y` is the lateral velocity, positive to 
 ```bash
 ros2 topic pub -r 10 /robot1/mecanum_controller/reference geometry_msgs/msg/TwistStamped \
 "{header: {frame_id: 'robot1/base_footprint'}, twist: {linear: {x: 0.0, y: 0.1}, angular: {z: 0.0}}}"
+```
+
+Omni rotation:
+
+```bash
+ros2 topic pub -r 10 /robot1/mecanum_controller/reference geometry_msgs/msg/TwistStamped \
+"{header: {frame_id: 'robot1/base_footprint'}, twist: {linear: {x: 0.0, y: 0.0}, angular: {z: 0.2}}}"
 ```
 
 If the robot does not move, check the launch log: with `stamp` at 0 the controller uses the current time, but some versions reject the message as too old.
