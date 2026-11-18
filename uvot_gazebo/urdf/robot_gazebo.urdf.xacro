@@ -80,15 +80,11 @@
         <wheel_radius>0.04</wheel_radius>
 
         <!--
-          Distance from robot centre to wheel:
-            x = 0.08 m
-            y = 0.10 m
-
-          Therefore:
-            lx + ly = 0.18 m
+          Distance from robot centre to wheel (igual que el firmware):
+            lx = 0.08125 m, ly = 0.105 m  ->  lx + ly = 0.18625 m
         -->
-        <lx>0.08</lx>
-        <ly>0.10</ly>
+        <lx>0.08125</lx>
+        <ly>0.105</ly>
 
       </plugin>
     </gazebo>
@@ -112,6 +108,47 @@
     </gazebo>
 
   </xacro:if>
+
+  <!-- ========================================================= -->
+  <!-- Skid / diff: rozamiento de las ruedas motrices            -->
+  <!-- ========================================================= -->
+  <xacro:unless value="${robot_type == 'omni'}">
+    <gazebo reference="$(arg robot_ns)/wheel1_link"><mu1>1.0</mu1><mu2>1.0</mu2></gazebo>
+    <gazebo reference="$(arg robot_ns)/wheel2_link"><mu1>1.0</mu1><mu2>1.0</mu2></gazebo>
+  </xacro:unless>
+  <xacro:if value="${robot_type == 'skid'}">
+    <gazebo reference="$(arg robot_ns)/wheel3_link"><mu1>1.0</mu1><mu2>1.0</mu2></gazebo>
+    <gazebo reference="$(arg robot_ns)/wheel4_link"><mu1>1.0</mu1><mu2>1.0</mu2></gazebo>
+  </xacro:if>
+
+  <!-- ========================================================= -->
+  <!-- IMU (MPU9250 en el robot real) -> /<ns>/imu               -->
+  <!-- Requiere gz-sim-imu-system en el mundo.                   -->
+  <!-- ========================================================= -->
+  <gazebo reference="$(arg robot_ns)/IMU_link">
+    <sensor name="imu" type="imu">
+      <always_on>true</always_on>
+      <update_rate>100</update_rate>
+      <topic>/$(arg robot_ns)/imu</topic>
+      <gz_frame_id>$(arg robot_ns)/IMU_link</gz_frame_id>
+    </sensor>
+  </gazebo>
+
+  <!-- ========================================================= -->
+  <!-- Ground truth: pose verdadera del robot                    -->
+  <!-- -> /model/<ns>/odometry_gt (puente en el launch)          -->
+  <!-- ========================================================= -->
+  <gazebo>
+    <plugin
+        filename="gz-sim-odometry-publisher-system"
+        name="gz::sim::systems::OdometryPublisher">
+      <odom_frame>$(arg robot_ns)/odom_gt</odom_frame>
+      <robot_base_frame>$(arg robot_ns)/base_footprint</robot_base_frame>
+      <odom_topic>/model/$(arg robot_ns)/odometry_gt</odom_topic>
+      <odom_publish_frequency>50</odom_publish_frequency>
+      <dimensions>2</dimensions>
+    </plugin>
+  </gazebo>
 
   <!-- ========================================================= -->
   <!-- ros2_control interfaces                                   -->

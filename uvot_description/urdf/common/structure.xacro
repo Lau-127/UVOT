@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
 
-  <xacro:macro name="uvot_common_structure" params="chassis_colour:=red exploded:=false">
+  <xacro:macro name="uvot_common_structure" params="chassis_colour:=red exploded:=false base_z:=0.018">
 
     <xacro:property name="exploded_middle" value="${0.05 if exploded else 0.0}"/>
     <xacro:property name="exploded_top" value="${0.10 if exploded else 0.0}"/>
@@ -16,7 +16,7 @@
     <joint name="base_joint" type="fixed">
       <parent link="$(arg robot_ns)/base_footprint"/>
       <child link="$(arg robot_ns)/base_link"/>
-      <origin xyz="0 0 0.018" rpy="0 0 0"/>
+      <origin xyz="0 0 ${base_z}" rpy="0 0 0"/>
     </joint>
 
     <!-- Bottom base-->

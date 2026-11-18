@@ -139,8 +139,12 @@ public:
     const double vx =
       r * 0.25 * (w1 + w2 + w3 + w4);
 
+    // vy > 0 = hacia la izquierda (REP-103). Inversa exacta de
+    // mecanum_drive_controller: FL = vx - vy - k wz, FR = vx + vy + k wz,
+    // RL = vx + vy - k wz, RR = vx - vy + k wz  ->  vy = r/4 (RL - RR + FR - FL)
+    // (la versión anterior tenía el signo cambiado y movía el robot a la derecha)
     const double vy =
-      r * 0.25 * (-w1 + w2 - w3 + w4);
+      r * 0.25 * (w1 - w2 + w3 - w4);
 
     const double wz =
       r / (4.0 * k) * (-w1 + w2 + w3 - w4);
@@ -170,8 +174,8 @@ private:
 
   // Distancia desde el centro del robot hasta cada rueda
   // en x e y.
-  double lx{0.08};
-  double ly{0.10};
+  double lx{0.08125};
+  double ly{0.105};
 
   std::string baseLinkName{"robot1/base_footprint"};
 

@@ -26,7 +26,7 @@
 
     kinematics:
       wheels_radius: 0.04
-      sum_of_robot_center_projection_on_X_Y_axis: 0.18
+      sum_of_robot_center_projection_on_X_Y_axis: 0.18625   # 0.08125 + 0.105
 
     base_frame_id: base_link
     odom_frame_id: odom
@@ -46,8 +46,11 @@
       - wheel2_joint
       - wheel3_joint
 
-    wheel_separation: 0.296
-    wheel_radius: 0.0375
+    # Vía geométrica 0.208 (b = 0.104). Por el derrape hace falta una vía
+    # efectiva mayor (en el real 2·B_SKID = 0.34, χ ≈ 1.64). Valor de partida:
+    # calibrar con un giro en simulación ->  nueva = actual · θ_mandado / θ_gt
+    wheel_separation: 0.281
+    wheel_radius: 0.0325
 
     base_frame_id: base_link
     odom_frame_id: odom
@@ -70,8 +73,8 @@
     right_wheel_names:
       - wheel2_joint
 
-    wheel_separation: 0.232
-    wheel_radius: 0.0375
+    wheel_separation: 0.22    # b = 0.11, igual que el firmware
+    wheel_radius: 0.0325
 
     base_frame_id: base_link
     odom_frame_id: odom

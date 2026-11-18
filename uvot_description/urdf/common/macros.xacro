@@ -114,26 +114,34 @@
   </xacro:macro>
 
   <!-- Standard wheel -->
-  <xacro:macro name="standard_wheel" params="wheel_name pos_x pos_y pos_z rpy_x rpy_y rpy_z colour:=black length_size:=0.025 radius_size:=0.0375 mass_value:=0.05 exploded_y:=0.0">
+  <xacro:macro name="standard_wheel" params="wheel_name pos_x pos_y pos_z rpy_x rpy_y rpy_z colour:=black length_size:=0.025 radius_size:=0.0325 mass_value:=0.05 exploded_y:=0.0 axis_sign:=1">
     <joint name="${wheel_name}_joint" type="continuous">
       <parent link="$(arg robot_ns)/base_link"/>
       <child link="$(arg robot_ns)/${wheel_name}_link"/>
       <origin xyz="${pos_x} ${pos_y + exploded_y} ${pos_z}" rpy="${rpy_x} ${rpy_y} ${rpy_z}"/>
-      <axis xyz="0 0 1"/>
+      <!-- axis_sign = -1 en las ruedas derechas (giradas pi en z): velocidad positiva = avance -->
+      <axis xyz="0 0 ${axis_sign}"/>
     </joint>
 
     <link name="$(arg robot_ns)/${wheel_name}_link">
       <visual>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <origin xyz="0 0 0" rpy="0 ${-pi/2} 0"/>
+
         <geometry>
-          <cylinder length="${length_size}" radius="${radius_size}"/>
+          <mesh
+            filename="${mesh_prefix}/Wheel65mm.dae"
+            scale="1 1 1"/>
         </geometry>
-        <material name="${colour}"/>
+
+        <!--material name="${colour}"/-->
       </visual>
+      <!-- Colisión esférica: un único punto de contacto en el plano medio de la
+           rueda. Con un cilindro, Gazebo (DART) apoya la rueda en el canto
+           interior y la vía efectiva sale 0.025 m más estrecha. -->
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <cylinder length="${length_size}" radius="${radius_size}"/>
+          <sphere radius="${radius_size}"/>
         </geometry>
       </collision>
       <inertial>
@@ -162,7 +170,8 @@
               radius_size:=0.04
               mass_value:=0.10
               exploded_y:=0.0
-              use_cylinder_collision:=true">
+              use_cylinder_collision:=true
+              flip_visual:=false">
 
     <joint name="${wheel_name}_joint" type="continuous">
       <parent link="$(arg robot_ns)/base_link"/>
@@ -177,9 +186,17 @@
 
     <link name="$(arg robot_ns)/${wheel_name}_link">
 
-      <!-- Original STL visual -->
+      <!-- Original STL visual.
+           flip_visual = true: girado 180° alrededor de la vertical para que
+           el cubo quede hacia el motor cuando el mesh es el del otro lado
+           (ruedas 3 y 4). Un giro no cambia la orientación de los rodillos. -->
       <visual>
-        <origin xyz="0 0 0" rpy="0 ${pi} ${-pi/2}"/>
+        <xacro:if value="${flip_visual}">
+          <origin xyz="0 0 0" rpy="0 0 ${pi/2}"/>
+        </xacro:if>
+        <xacro:unless value="${flip_visual}">
+          <origin xyz="0 0 0" rpy="0 ${pi} ${-pi/2}"/>
+        </xacro:unless>
 
         <geometry>
           <mesh

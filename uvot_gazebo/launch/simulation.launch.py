@@ -147,7 +147,7 @@ def generate_launch_description():
     # ============================================================
     # ROS <-> Gazebo bridge
     #
-    # Only /clock is required here.
+    # /clock, IMU (/<ns>/imu) y ground truth (/model/<ns>/odometry_gt).
     # cmd_vel remains entirely on the ROS 2 side.
     # ============================================================
 
@@ -156,7 +156,11 @@ def generate_launch_description():
         executable='parameter_bridge',
         arguments=[
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
+            ['/', namespace, '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU'],
+            ['/model/', namespace,
+             '/odometry_gt@nav_msgs/msg/Odometry[gz.msgs.Odometry'],
         ],
+        parameters=[{'use_sim_time': True}],
         output='screen'
     )
 
