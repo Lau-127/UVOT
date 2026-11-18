@@ -63,3 +63,56 @@ ros2 launch uvot_navigation navigation_launch.py   namespace:=robot1   robot_typ
 ```
 
 Use `robot_type:=skid` or `robot_type:=omni` as required.
+[200~## Simulation (Gazebo Harmonic)
+
+The simulation does not need the micro-ROS agent or `robot.launch.py`: the Gazebo launch starts `robot_state_publisher`, `ros2_control` and the bridges.
+
+```bash
+ros2 launch uvot_gazebo simulation.launch.py robot_type:=diff
+```
+
+Use `robot_type:=skid` or `robot_type:=omni` for the other locomotion configurations.
+
+### Move the robot
+
+The controllers listen under `/robot1/...` and expect `geometry_msgs/msg/TwistStamped`, not `Twist`. They stop the robot if no message arrives for 0.5 s, so publish continuously with `-r 10` and stop with Ctrl+C.
+
+Diff:
+
+```bash
+ros2 topic pub -r 10 /robot1/diff_controller/cmd_vel geometry_msgs/msg/TwistStamped \
+"{header: {frame_id: 'robot1/base_footprint'}, twist: {linear: {x: 0.1}, angular: {z: 0.0}}}"
+```
+
+Skid:
+
+```bash
+ros2 topic pub -r 10 /robot1/skid_controller/cmd_vel geometry_msgs/msg/TwistStamped \
+"{header: {frame_id: 'robot1/base_footprint'}, twist: {linear: {x: 0.1}, angular: {z: 0.0}}}"
+```
+
+Omni (the topic is `reference`; `linear.y` is the lateral velocity, positive to the left):
+
+```bash
+ros2 topic pub -r 10 /robot1/mecanum_controller/reference geometry_msgs/msg/TwistStamped \
+"{header: {frame_id: 'robot1/base_footprint'}, twist: {linear: {x: 0.0, y: 0.1}, angular: {z: 0.0}}}"
+```
+
+If the robot does not move, check the launch log: with `stamp` at 0 the controller uses the current time, but some versions reject the message as too old.
+
+### Keyboard teleoperation
+
+```bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args \
+  -p stamped:=true -p frame_id:=robot1/base_footprint \
+  -r cmd_vel:=/robot1/diff_controller/cmd_vel
+```
+
+For skid use `-r cmd_vel:=/robot1/skid_controller/cmd_vel`. For omni use `-r cmd_vel:=/robot1/mecanum_controller/reference` and hold Shift for lateral motion.
+
+### Sensors
+
+- IMU: `/robot1/imu` (100 Hz)
+- Ground-truth pose: `/model/robot1/odometry_gt` (50 Hz)
+EOF~
+
