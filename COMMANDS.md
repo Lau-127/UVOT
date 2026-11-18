@@ -1,12 +1,19 @@
 # UVOT Commands
 
-Quick reference for the main commands used with the physical UVOT platform.
+Quick reference for the main commands used with the UVOT platform, on the physical robot and in simulation (Gazebo).
 
 The examples use the namespace `robot1`. Replace it when necessary.
 
 The workspace path below is generic; adapt it to the ROS 2 workspace used on the target computer.
 
-## Upload robot configuration to the ESP32
+- [Real robot](#real-robot)
+- [Simulation (Gazebo Harmonic)](#simulation-gazebo-harmonic)
+
+---
+
+## Real robot
+
+### Upload robot configuration to the ESP32
 
 ```bash
 cd ~/ros2_ws/src/UVOT/firmware/uvot_esp32
@@ -26,46 +33,85 @@ Examples:
 ./upload.sh omni robot1
 ```
 
-## Launch micro-ROS
+### Launch micro-ROS
 
 ```bash
-ros2 run micro_ros_agent micro_ros_agent serial   --dev /dev/esp32   --baudrate 921600
+ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/esp32 --baudrate 921600
 ```
 
-## Launch the robot
+### Launch the robot
 
 This launches `robot_state_publisher`, `odom_to_tf` and `lidar_with_filter`:
 
 ```bash
-ros2 launch uvot_bringup robot.launch.py   namespace:=robot1   robot_type:=diff
+ros2 launch uvot_bringup robot.launch.py namespace:=robot1 robot_type:=diff
 ```
 
 Use `robot_type:=skid` or `robot_type:=omni` for the other locomotion configurations.
 
-### Launch components separately
+#### Launch components separately
 
 ```bash
-ros2 launch uvot_bringup robot_state_publisher.launch.py   namespace:=robot1   robot_type:=diff
+ros2 launch uvot_bringup robot_state_publisher.launch.py namespace:=robot1 robot_type:=diff
 ```
 
 ```bash
-ros2 launch uvot_bringup odom_to_tf.launch.py   namespace:=robot1
+ros2 launch uvot_bringup odom_to_tf.launch.py namespace:=robot1
 ```
 
 ```bash
-ros2 launch uvot_lidar lidar_with_filter.launch.py   namespace:=robot1
+ros2 launch uvot_lidar lidar_with_filter.launch.py namespace:=robot1
 ```
 
-## Launch Nav2
+### Move the robot
+
+With the micro-ROS agent and the bringup running, the ESP32 listens on `/robot1/cmd_vel` with `geometry_msgs/msg/Twist` (not `TwistStamped`, unlike the simulation). Publish continuously with `-r 10` and stop with Ctrl+C.
+
+Diff / skid:
 
 ```bash
-ros2 launch uvot_navigation navigation_launch.py   namespace:=robot1   robot_type:=diff   map:=$(ros2 pkg prefix --share uvot_navigation)/maps/quiro_save.yaml
+ros2 topic pub -r 10 /robot1/cmd_vel geometry_msgs/msg/Twist \
+"{linear: {x: 0.1}, angular: {z: 0.0}}"
+```
+
+Omni (`linear.y` is the lateral velocity, positive to the left):
+
+```bash
+ros2 topic pub -r 10 /robot1/cmd_vel geometry_msgs/msg/Twist \
+"{linear: {x: 0.0, y: 0.1}, angular: {z: 0.0}}"
+```
+
+### Keyboard teleoperation
+
+```bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args \
+  -r cmd_vel:=/robot1/cmd_vel
+```
+
+In omni, hold Shift for lateral motion.
+
+### Sensors
+
+- Odometry: `/robot1/odom`
+- IMU: `/robot1/imu`
+- Wheel states: `/robot1/joint_states`
+- Firmware information: `/robot1/robot_info`
+
+### Launch Nav2
+
+```bash
+ros2 launch uvot_navigation navigation_launch.py namespace:=robot1 robot_type:=diff map:=$(ros2 pkg prefix --share uvot_navigation)/maps/quiro_save.yaml
 ```
 
 Use `robot_type:=skid` or `robot_type:=omni` as required.
-[200~## Simulation (Gazebo Harmonic)
+
+---
+
+## Simulation (Gazebo Harmonic)
 
 The simulation does not need the micro-ROS agent or `robot.launch.py`: the Gazebo launch starts `robot_state_publisher`, `ros2_control` and the bridges.
+
+### Launch the simulation
 
 ```bash
 ros2 launch uvot_gazebo simulation.launch.py \
@@ -127,7 +173,7 @@ For skid use `-r cmd_vel:=/robot1/skid_controller/cmd_vel`. For omni use `-r cmd
 
 ### Sensors
 
+- Controller odometry: `/robot1/diff_controller/odom`, `/robot1/skid_controller/odom` or `/robot1/mecanum_controller/odometry`
 - IMU: `/robot1/imu` (100 Hz)
+- Wheel states: `/robot1/joint_states`
 - Ground-truth pose: `/model/robot1/odometry_gt` (50 Hz)
-EOF~
-
