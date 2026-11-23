@@ -108,10 +108,10 @@ Drive the robot around with the keyboard teleoperation (see above) until the map
 ```bash
 ros2 run nav2_map_server map_saver_cli \
   -f ~/ros/omni_ws/src/UVOT/uvot_navigation/maps/<map_name> \
-  -t /robot1/map
+  -t /map
 ```
 
-Check the map topic with `ros2 topic list | grep map` if it is not `/robot1/map`. Rebuild the workspace (`colcon build`) so that the new map is installed.
+The map is global (frame `map`, topic `/map`), shared by all the robots. Rebuild the workspace (`colcon build`) so that the new map is installed.
 
 ### Launch Nav2
 
