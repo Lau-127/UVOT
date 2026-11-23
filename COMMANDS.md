@@ -97,13 +97,51 @@ In omni, hold Shift for lateral motion.
 - Wheel states: `/robot1/joint_states`
 - Firmware information: `/robot1/robot_info`
 
-### Launch Nav2
+### SLAM (build a map)
 
 ```bash
-ros2 launch uvot_navigation navigation_launch.py namespace:=robot1 robot_type:=diff map:=$(ros2 pkg prefix --share uvot_navigation)/maps/quiro_save.yaml
+ros2 launch uvot_navigation slam.launch.py namespace:=robot1
 ```
 
-Use `robot_type:=skid` or `robot_type:=omni` as required.
+Drive the robot around with the keyboard teleoperation (see above) until the map is complete, then save it:
+
+```bash
+ros2 run nav2_map_server map_saver_cli \
+  -f ~/ros/omni_ws/src/UVOT/uvot_navigation/maps/<map_name> \
+  -t /robot1/map
+```
+
+Check the map topic with `ros2 topic list | grep map` if it is not `/robot1/map`. Rebuild the workspace (`colcon build`) so that the new map is installed.
+
+### Launch Nav2
+
+`nav.launch.py` generates the Nav2 parameters at launch time from `config/nav2_params_common.yaml`, adapted to the robot type (footprint, motion model, lateral velocity, critics).
+
+With a map (AMCL localisation):
+
+```bash
+ros2 launch uvot_navigation nav.launch.py \
+  namespace:=robot1 \
+  robot_type:=diff \
+  fase:=amcl \
+  map:=$(ros2 pkg prefix --share uvot_navigation)/maps/lab_uvot.yaml
+```
+
+Without a map (navigation in the odometry frame):
+
+```bash
+ros2 launch uvot_navigation nav.launch.py namespace:=robot1 robot_type:=diff fase:=firmware
+```
+
+| `fase` | Map | Global frame | Odometry |
+|---|---|---|---|
+| `amcl` (default) | yes (`map:=`) | `map` | `/robot1/odom` |
+| `firmware` | no | `robot1/odom` | `/robot1/odom` (firmware EKF) |
+| `odom` | no | `robot1/odom` | `/robot1/odom_wheels` (wheels only) |
+
+Use `robot_type:=skid` or `robot_type:=omni` as required. Available maps: `lab_uvot.yaml`, `dep1.yaml`.
+
+The default goal checker is `general_goal_checker`. For precision validation tests, set `goal_checker_plugins: ["precise_goal_checker"]` (5 cm / 0.1 rad) in `config/nav2_params_common.yaml`.
 
 ---
 
