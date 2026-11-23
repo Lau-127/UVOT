@@ -8,7 +8,7 @@ This repository contains the ESP32 firmware, the ROS 2 packages for the physical
 - **Skid-steer (`skid`)**: four conventional driven wheels.
 - **Differential drive (`diff`)**: two rear driven wheels and a passive front caster.
 
-The current simulation stack targets **Ubuntu 24.04**, **ROS 2 Jazzy** and **Gazebo Harmonic / Gazebo Sim 8**.
+The software targets **Ubuntu 24.04** and **ROS 2 Jazzy**: on a Raspberry Pi 5 with an ESP32 microcontroller (micro-ROS) for the physical robot, and with **Gazebo Harmonic / Gazebo Sim 8** for simulation.
 
 ## Repository structure
 
@@ -41,7 +41,7 @@ Contains the Gazebo simulation files, `gz_ros2_control` integration, controller 
 
 ### `uvot_bringup`
 
-Package reserved for physical-robot bringup and system launch configuration.
+Launch files for the physical robot: `robot_state_publisher`, the odometry TF (`odom_to_tf`) and the filtered LiDAR, all started together by `robot.launch.py`.
 
 ### `uvot_lidar`
 
@@ -49,7 +49,11 @@ Contains LiDAR launch and filtering configuration.
 
 ### `uvot_navigation`
 
-Contains SLAM and navigation configuration. These parts are still being prepared and are not documented here yet.
+SLAM and autonomous navigation with Nav2:
+
+- `slam.launch.py`: map building with `slam_toolbox` (asynchronous mode). The map is global (frame `map`), shared by all the robots.
+- `nav.launch.py`: Nav2 with the MPPI controller. The parameters are generated at launch time from a common template (`config/nav2_params_common.yaml`), adapted to the robot type (footprint, motion model, lateral velocity, critics). Three modes: with a map and AMCL localisation, or without a map in the odometry frame (firmware EKF or wheels only).
+- `maps/`: maps of the test environments (`lab_uvot`, `dep1`).
 
 ## Requirements
 
@@ -57,7 +61,9 @@ Recommended environment:
 
 - Ubuntu 24.04
 - ROS 2 Jazzy
-- Gazebo Harmonic / Gazebo Sim 8
+- Gazebo Harmonic / Gazebo Sim 8 (simulation only)
+- Nav2 and `slam_toolbox` (navigation)
+- micro-ROS agent (physical robot)
 
 Install the available package dependencies with:
 
