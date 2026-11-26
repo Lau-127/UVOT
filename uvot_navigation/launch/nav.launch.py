@@ -40,15 +40,23 @@ def _lanzar(context, *args, **kwargs):
     mapa = LaunchConfiguration('map').perform(context)
     sim = LaunchConfiguration('use_sim_time').perform(context).lower() == 'true'
     log = LaunchConfiguration('log_level').perform(context)
+    gc = LaunchConfiguration('goal_checker').perform(context)
+    xy_tol = float(LaunchConfiguration('xy_tol').perform(context))
+    yaw_tol = float(LaunchConfiguration('yaw_tol').perform(context))
 
-    texto = generar(robot, fase, ns, mapa)
+    ajustes = LaunchConfiguration('ajustes').perform(context)
+
+    texto = generar(robot, fase, ns, mapa, goal_checker=gc, xy_tol=xy_tol, yaw_tol=yaw_tol,
+                    ajustes=ajustes)
+    if ajustes:
+        print(f'[nav.launch] ajustes de FollowPath: {ajustes}')
     # Los nodos quedan como /<ns>/<nodo>: las claves del YAML tienen que ir
     # bajo '<ns>:' o ROS 2 ignora los parámetros sin avisar (igual que en
     # odom_to_tf.launch.py; nav2_bringup lo hace con RewrittenYaml root_key).
     if ns:
         texto = f'{ns}:\n' + '\n'.join(('  ' + l if l.strip() else l)
                                          for l in texto.splitlines()) + '\n'
-    fd, params = tempfile.mkstemp(prefix=f'nav2_{ns}_{robot}_{fase}_', suffix='.yaml')
+    fd, params = tempfile.mkstemp(prefix=f'nav2_{ns}_{robot}_{fase}_{gc}_', suffix='.yaml')
     with os.fdopen(fd, 'w') as f:
         f.write(texto)
     print(f'[nav.launch] parámetros de Nav2: {params}')
@@ -110,6 +118,17 @@ def generate_launch_description():
                               description='amcl: con mapa | firmware/odom: sin mapa'),
         DeclareLaunchArgument('map', default_value='',
                               description='Ruta al .yaml del mapa (fase amcl)'),
+        DeclareLaunchArgument('goal_checker', default_value='general',
+                              choices=['general', 'precise'],
+                              description='general: 0.35 m / 0.5 rad | precise: xy_tol / '
+                                          'yaw_tol (ajuste del MPPI y ensayos de validación)'),
+        DeclareLaunchArgument('xy_tol', default_value='0.05',
+                              description='Tolerancia xy del goal checker precise (m)'),
+        DeclareLaunchArgument('yaw_tol', default_value='0.10',
+                              description='Tolerancia de orientación del goal checker precise (rad)'),
+        DeclareLaunchArgument('ajustes', default_value='',
+                              description="Sobrescribe parámetros de FollowPath, p. ej. "
+                                          "'TwirlingCritic.twirling_cost_weight=40,vx_std=0.3'"),
         DeclareLaunchArgument('use_sim_time', default_value='false'),
         DeclareLaunchArgument('log_level', default_value='info'),
         OpaqueFunction(function=_lanzar),

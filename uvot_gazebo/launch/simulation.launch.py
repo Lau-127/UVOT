@@ -14,6 +14,7 @@ from launch.substitutions import (
     LaunchConfiguration,
     Command,
     PythonExpression,
+    PathJoinSubstitution,
 )
 
 from launch_ros.actions import Node
@@ -43,6 +44,11 @@ def generate_launch_description():
 
     namespace = LaunchConfiguration('namespace')
     robot_type = LaunchConfiguration('robot_type')
+    world_name = LaunchConfiguration('world')
+    x_pose = LaunchConfiguration('x')
+    y_pose = LaunchConfiguration('y')
+    yaw_pose = LaunchConfiguration('yaw')
+    nav = LaunchConfiguration('nav')
 
     # ============================================================
     # Gazebo resource path
@@ -58,6 +64,8 @@ def generate_launch_description():
         for path in [
             current_resource_path,
             description_share_parent,
+            # Modelos de entorno (model://dep_4, ...)
+            os.path.join(gazebo_pkg, 'models'),
         ]
         if path
     ]
@@ -100,11 +108,11 @@ def generate_launch_description():
     # Files
     # ============================================================
 
-    world = os.path.join(
+    world = PathJoinSubstitution([
         gazebo_pkg,
         'worlds',
-        'empty.sdf'
-    )
+        world_name
+    ])
 
     xacro_file = os.path.join(
         gazebo_pkg,
@@ -140,14 +148,15 @@ def generate_launch_description():
             )
         ),
         launch_arguments={
-            'gz_args': f'-r {world}'
+            'gz_args': ['-r ', world]
         }.items()
     )
 
     # ============================================================
     # ROS <-> Gazebo bridge
     #
-    # /clock, IMU (/<ns>/imu) y ground truth (/model/<ns>/odometry_gt).
+    # /clock, IMU (/<ns>/imu), lidar (/<ns>/scan) y ground truth
+    # (/model/<ns>/odometry_gt).
     # cmd_vel remains entirely on the ROS 2 side.
     # ============================================================
 
@@ -157,10 +166,17 @@ def generate_launch_description():
         arguments=[
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
             ['/', namespace, '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU'],
+            ['/', namespace,
+             '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan'],
             ['/model/', namespace,
              '/odometry_gt@nav_msgs/msg/Odometry[gz.msgs.Odometry'],
         ],
         parameters=[{'use_sim_time': True}],
+        # Nav2 (igual que en el real) lee /<ns>/scan_filtered. En sim no hay
+        # filtro: el scan simulado ya sale limpio, se publica con ese nombre.
+        remappings=[
+            (['/', namespace, '/scan'], ['/', namespace, '/scan_filtered']),
+        ],
         output='screen'
     )
 
@@ -190,9 +206,10 @@ def generate_launch_description():
         arguments=[
             '-name', namespace,
             '-topic', [namespace, '/robot_description'],
-            '-x', '0.0',
-            '-y', '0.0',
+            '-x', x_pose,
+            '-y', y_pose,
             '-z', '0.001',
+            '-Y', yaw_pose,
         ]
     )
 
@@ -263,6 +280,29 @@ def generate_launch_description():
         )
     )
 
+    # ============================================================
+    # Puente de topics para Nav2 (solo con nav:=true)
+    #
+    # Nav2 usa la misma configuración que el robot real:
+    # /<ns>/cmd_vel (Twist), /<ns>/odom y /tf. Este nodo traduce a/desde
+    # los topics del controlador de ros2_control (skid, diff y omni).
+    # Con nav:=false todo queda como antes (trajectory_test.py, batería).
+    # ============================================================
+
+    sim_nav_bridge = Node(
+        package='uvot_gazebo',
+        executable='sim_nav_bridge.py',
+        name='sim_nav_bridge',
+        namespace=namespace,
+        output='screen',
+        parameters=[{
+            'robot_ns': namespace,
+            'robot_type': robot_type,
+            'use_sim_time': True,
+        }],
+        condition=IfCondition(nav),
+    )
+
     # Spawn JSB only after Gazebo has successfully created the robot
     start_joint_state_broadcaster = RegisterEventHandler(
         OnProcessExit(
@@ -303,6 +343,26 @@ def generate_launch_description():
             description='UVOT locomotion configuration'
         ),
 
+        DeclareLaunchArgument(
+            'world',
+            default_value='empty.sdf',
+            description='Archivo de mundo dentro de uvot_gazebo/worlds (p. ej. dep_4.sdf)'
+        ),
+
+        DeclareLaunchArgument('x', default_value='0.0',
+                              description='Posición x de spawn (m, frame map)'),
+        DeclareLaunchArgument('y', default_value='0.0',
+                              description='Posición y de spawn (m, frame map)'),
+        DeclareLaunchArgument('yaw', default_value='0.0',
+                              description='Orientación de spawn (rad)'),
+
+        DeclareLaunchArgument(
+            'nav',
+            default_value='false',
+            description='true: lanza sim_nav_bridge para usar Nav2 con los topics '
+                        'del robot real (/<ns>/cmd_vel Twist, /<ns>/odom, /tf)'
+        ),
+
         # Environment must be configured before Gazebo starts
         gz_resource_path,
         gz_plugin_path,
@@ -314,4 +374,6 @@ def generate_launch_description():
 
         start_joint_state_broadcaster,
         start_drive_controller,
+
+        sim_nav_bridge,
     ])

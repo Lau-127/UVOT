@@ -13,7 +13,8 @@
     <xacro:uvot_common_structure
         chassis_colour="${chassis_colour}"
         exploded="${exploded}"
-        base_z="${wheel_r - 0.022}"/>
+        base_z="${wheel_r - 0.022}"
+        base_x="${0.0825 if robot_type == 'diff' else 0.0}"/>
 
     <!-- Configuration-dependent locomotion -->
     <xacro:if value="${robot_type == 'omni'}">

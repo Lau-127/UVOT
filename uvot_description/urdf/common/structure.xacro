@@ -1,7 +1,17 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
 
-  <xacro:macro name="uvot_common_structure" params="chassis_colour:=red exploded:=false base_z:=0.018">
+  <!--
+    base_x: posición de base_link (centro del chasis) respecto a base_footprint.
+    base_footprint debe estar en el centro de giro del robot (REP 105), que es
+    donde calculan la pose la odometría del firmware (EKF) y el
+    diff_drive_controller, y donde Nav2 (MPPI, Rotation Shim, huella) supone
+    que gira el robot:
+      - omni y skid: centro de giro = centro del chasis -> base_x = 0;
+      - diff: centro de giro = punto medio del eje, 0.0825 m por detrás del
+        centro del chasis -> base_x = +0.0825.
+  -->
+  <xacro:macro name="uvot_common_structure" params="chassis_colour:=red exploded:=false base_z:=0.018 base_x:=0.0">
 
     <xacro:property name="exploded_middle" value="${0.05 if exploded else 0.0}"/>
     <xacro:property name="exploded_top" value="${0.10 if exploded else 0.0}"/>
@@ -16,7 +26,7 @@
     <joint name="base_joint" type="fixed">
       <parent link="$(arg robot_ns)/base_footprint"/>
       <child link="$(arg robot_ns)/base_link"/>
-      <origin xyz="0 0 ${base_z}" rpy="0 0 0"/>
+      <origin xyz="${base_x} 0 ${base_z}" rpy="0 0 0"/>
     </joint>
 
     <!-- Bottom base-->
@@ -137,4 +147,3 @@
   </xacro:macro>
 
 </robot>
-

@@ -55,7 +55,7 @@ bt_navigator:
     robot_base_frame: __ROBOT_NS__/base_footprint
     odom_topic: __ODOM_TOPIC__              # /ns/odom (firmware) | /ns/odom_wheels (solo ruedas)
     bt_loop_duration: 10
-    default_server_timeout: 20
+    default_server_timeout: 200    # ms; con 20 el primer objetivo fallaba (compute_path_to_pose sin confirmar a tiempo)
     wait_for_service_timeout: 1000
     action_server_result_timeout: 900.0
     navigators: ["navigate_to_pose", "navigate_through_poses"]
@@ -85,7 +85,7 @@ controller_server:
     min_theta_velocity_threshold: 0.001
     failure_tolerance: 0.3
     progress_checker_plugins: ["progress_checker"]
-    goal_checker_plugins: ["general_goal_checker"]   # "precise_goal_checker" (5 cm / 0.1 rad) para los ensayos de validación
+    goal_checker_plugins: ["__GOAL_CHECKER__"]   # general (0.35 m / 0.5 rad) | precise (xy_tol / yaw_tol): argumento goal_checker del launch
     controller_plugins: ["FollowPath"]
     use_realtime_priority: false
 
@@ -97,8 +97,8 @@ controller_server:
     # Goal checker parameters
     precise_goal_checker:
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.05
-      yaw_goal_tolerance: 0.10
+      xy_goal_tolerance: __XY_TOL__        # por defecto 0.05 (argumento xy_tol del launch)
+      yaw_goal_tolerance: __YAW_TOL__      # por defecto 0.10 (argumento yaw_tol del launch)
       stateful: True
     general_goal_checker:
       stateful: True
@@ -106,21 +106,35 @@ controller_server:
       xy_goal_tolerance: 0.35 #0.25
       yaw_goal_tolerance: 0.5 #0.25
     FollowPath:
-      plugin: "nav2_mppi_controller::MPPIController"
+      # RotationShimController con el MPPI dentro en los tres robots:
+      #  - diff/skid: gira en el sitio para encarar la ruta al empezar y hace el giro final;
+      #  - omni: solo el giro final (puede desplazarse en cualquier dirección sin girar antes).
+      # Lo decide uvot_nav2_params.py (ROBOTS: shim, shim_ang).
+      plugin: "__FOLLOWPATH_PLUGIN__"
+      # --- Rotation Shim (solo se usan si plugin es el shim) ---
+      primary_controller: "nav2_mppi_controller::MPPIController"
+      angular_dist_threshold: __SHIM_ANG__   # diff/skid 0.785: gira en el sitio si la ruta se desvía > 45°; omni 3.2: nunca (solo giro final)
+      forward_sampling_distance: 0.5
+      rotate_to_heading_angular_vel: __WZ_MAX__
+      max_angular_accel: __AZ_MAX__
+      simulate_ahead_time: 1.0
+      rotate_to_goal_heading: true         # giro final en el sitio al entrar en la tolerancia xy
+      # --- MPPI (controlador principal) ---
       time_steps: 20               # 20 x 0.1 = 2 s de horizonte (antes 15 x 0.05 = 0.75 s)
       model_dt: 0.1 #0.05
       batch_size: 500 #1000        # subir a 2000 si la CPU va sobrada
-      ax_max: 3.0
-      ax_min: -3.0
-      ay_max: 3.0
-      az_max: 3.5
+      # Límites = los del velocity_smoother (uvot_nav2_params.py, ROBOTS)
+      ax_max: __AX_MAX__
+      ax_min: __AX_MIN__
+      ay_max: __AY_MAX__
+      az_max: __AZ_MAX__
       vx_std: 0.2
       vy_std: 0.2
       wz_std: 0.4
-      vx_max: 0.5
-      vx_min: 0.0 #-0.35
-      vy_max: 0.5
-      wz_max: 1.9
+      vx_max: __VX_MAX__
+      vx_min: __VX_MIN__        # = -vx_max (antes 0.0: sin marcha atrás se bloqueaba cerca del objetivo)
+      vy_max: __VY_MAX__
+      wz_max: __WZ_MAX__
       iteration_count: 1
       prune_distance: 1.7
       transform_tolerance: 0.1
@@ -136,8 +150,8 @@ controller_server:
         min_turning_r: 0.2
       critics: [
         "ConstraintCritic", "CostCritic", "GoalCritic",
-        "GoalAngleCritic", "PathAlignCritic", "PathFollowCritic",
-        "PathAngleCritic", "PreferForwardCritic"__MPPI_EXTRA_CRITICS__]
+        "GoalAngleCritic", "PathAlignCritic",
+        "PathFollowCritic"__MPPI_EXTRA_CRITICS__]   # diff/skid: + PathAngle, PreferForward | omni: + Twirling
       ConstraintCritic:
         enabled: true
         cost_power: 1

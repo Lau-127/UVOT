@@ -135,6 +135,49 @@
   </gazebo>
 
   <!-- ========================================================= -->
+  <!-- Lidar (RPLIDAR S2 en el robot real) -> /<ns>/scan         -->
+  <!-- 10 Hz, 3200 puntos/vuelta (0.1125°), 0.05-30 m, ±3 cm.    -->
+  <!-- Requiere gz-sim-sensors-system (ogre2) en el mundo.       -->
+  <!-- Al ser un sensor de render, NO ve geometría solo de       -->
+  <!-- colisión (útil para simular cristales).                   -->
+  <!-- ========================================================= -->
+  <gazebo reference="$(arg robot_ns)/base_scan">
+    <sensor name="lidar" type="gpu_lidar">
+      <always_on>true</always_on>
+      <visualize>false</visualize>
+      <update_rate>10</update_rate>
+      <topic>/$(arg robot_ns)/scan</topic>
+      <gz_frame_id>$(arg robot_ns)/base_scan</gz_frame_id>
+      <lidar>
+        <scan>
+          <horizontal>
+            <samples>3200</samples>
+            <resolution>1</resolution>
+            <min_angle>${-pi}</min_angle>
+            <max_angle>${pi}</max_angle>
+          </horizontal>
+          <vertical>
+            <samples>1</samples>
+            <resolution>1</resolution>
+            <min_angle>0</min_angle>
+            <max_angle>0</max_angle>
+          </vertical>
+        </scan>
+        <range>
+          <min>0.05</min>
+          <max>30.0</max>
+          <resolution>0.01</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </lidar>
+    </sensor>
+  </gazebo>
+
+  <!-- ========================================================= -->
   <!-- Ground truth: pose verdadera del robot                    -->
   <!-- -> /model/<ns>/odometry_gt (puente en el launch)          -->
   <!-- ========================================================= -->

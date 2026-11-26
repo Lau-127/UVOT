@@ -29,9 +29,17 @@ install(
   DIRECTORY
     launch
     worlds
+    models
     config
     urdf
   DESTINATION share/${PROJECT_NAME}
+)
+
+# Puente de topics para navegar con Nav2 en simulación (nav:=true)
+install(
+  PROGRAMS
+    scripts/sim_nav_bridge.py
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 ament_package()

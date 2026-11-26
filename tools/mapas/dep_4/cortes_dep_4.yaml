@@ -1,0 +1,11 @@
+# Cortes manuales [x0, y0, x1, y1] en píxeles de la imagen (origen arriba a la izquierda,
+# como en GIMP). Cierran las cristaleras por las que se escapan los rayos del lidar.
+cortes:
+  - [78, 195, 78, 385]       # sala de la izquierda, pared oeste
+  - [655, 298, 725, 296]     # abanico superior (x≈690)
+  - [925, 286, 975, 283]     # abanico superior (x≈950)
+  - [455, 356, 495, 353]     # fuga inferior (x≈475)
+  - [700, 344, 742, 341]     # fuga inferior (x≈720)
+  - [296, 499, 374, 499]     # puerta del pasillo sur
+  - [1481, 232, 1481, 300]   # pasillo este, pared este
+  - [278, 183, 354, 183]     # zona norte del pasillo vertical (se descarta)
