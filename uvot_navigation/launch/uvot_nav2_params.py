@@ -64,6 +64,9 @@ ROBOTS = {
     "omni": dict(amcl="nav2_amcl::OmniMotionModel", mppi="Omni", min_y="0.001",
                  v=(0.3, 0.3, 1.0), a=(0.5, 0.5, 2.5),
                  critics=', "TwirlingCritic"', shim=True, shim_ang=3.2,
+                 # Ajuste en sim (26-11-2026, 3 repeticiones): con 5/5 la vuelta
+                 # tardaba 34 s; con PathFollow 20 + Goal 15, 8 s y recta 7.8 s
+                 ajustes="PathFollowCritic.cost_weight=20,GoalCritic.cost_weight=15",
                  huella=_huella()),
 }
 
@@ -126,11 +129,11 @@ def _aplicar_ajustes(texto, ajustes):
 
 
 def generar(robot, fase, ns="robot1", mapa="", plantilla=None, goal_checker="general",
-            xy_tol=0.05, yaw_tol=0.10, ajustes=""):
+            xy_tol=0.03, yaw_tol=0.05, ajustes=""):
     """Devuelve el texto YAML de Nav2 para ese robot y esa fase.
 
     goal_checker: 'general' (0.35 m / 0.5 rad) o 'precise' (xy_tol m / yaw_tol
-    rad; por defecto 0.05 / 0.10), para los ensayos de validación y el ajuste.
+    rad; por defecto 0.03 / 0.05, elegidos con el barrido en sim del 26-11-2026), para los ensayos de validación y el ajuste.
     ajustes: sobrescrituras de FollowPath (ver _aplicar_ajustes), para probar
     parámetros del controlador sin tocar la plantilla.
     """
@@ -190,11 +193,14 @@ def generar(robot, fase, ns="robot1", mapa="", plantilla=None, goal_checker="gen
     restos = sorted({p for p in texto.split() if p.startswith("__") and p.endswith("__")})
     if restos:
         raise ValueError(f"Quedan marcadores sin rellenar: {restos}")
-    if ajustes:
-        texto = _aplicar_ajustes(texto, ajustes)
+    # Primero los pesos propios del robot (ROBOTS) y después los del launch,
+    # que pueden sobrescribirlos para probar otros valores
+    todos = ",".join(p for p in (r.get("ajustes", ""), ajustes) if p)
+    if todos:
+        texto = _aplicar_ajustes(texto, todos)
     return (f"# Generado con uvot_nav2_params.py {robot} {fase} --ns {ns}"
             f" --goal-checker {goal_checker} --xy-tol {xy_tol} --yaw-tol {yaw_tol}"
-            f" --ajustes '{ajustes}'\n" + texto)
+            f" --ajustes '{todos}'\n" + texto)
 
 
 def main():
@@ -206,9 +212,9 @@ def main():
     ap.add_argument("--mapa", default="", help="ruta al .yaml del mapa (fase amcl)")
     ap.add_argument("--goal-checker", default="general", choices=GOAL_CHECKERS,
                     help="general (0.35 m / 0.5 rad) o precise (0.05 m / 0.1 rad)")
-    ap.add_argument("--xy-tol", type=float, default=0.05,
+    ap.add_argument("--xy-tol", type=float, default=0.03,
                     help="tolerancia xy del precise_goal_checker (m)")
-    ap.add_argument("--yaw-tol", type=float, default=0.10,
+    ap.add_argument("--yaw-tol", type=float, default=0.05,
                     help="tolerancia de orientación del precise_goal_checker (rad)")
     ap.add_argument("--ajustes", default="",
                     help="sobrescribe FollowPath: 'TwirlingCritic.twirling_cost_weight=40,vx_std=0.3'")

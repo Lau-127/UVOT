@@ -122,9 +122,9 @@ def generate_launch_description():
                               choices=['general', 'precise'],
                               description='general: 0.35 m / 0.5 rad | precise: xy_tol / '
                                           'yaw_tol (ajuste del MPPI y ensayos de validación)'),
-        DeclareLaunchArgument('xy_tol', default_value='0.05',
+        DeclareLaunchArgument('xy_tol', default_value='0.03',
                               description='Tolerancia xy del goal checker precise (m)'),
-        DeclareLaunchArgument('yaw_tol', default_value='0.10',
+        DeclareLaunchArgument('yaw_tol', default_value='0.05',
                               description='Tolerancia de orientación del goal checker precise (rad)'),
         DeclareLaunchArgument('ajustes', default_value='',
                               description="Sobrescribe parámetros de FollowPath, p. ej. "

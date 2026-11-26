@@ -97,8 +97,8 @@ controller_server:
     # Goal checker parameters
     precise_goal_checker:
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: __XY_TOL__        # por defecto 0.05 (argumento xy_tol del launch)
-      yaw_goal_tolerance: __YAW_TOL__      # por defecto 0.10 (argumento yaw_tol del launch)
+      xy_goal_tolerance: __XY_TOL__        # por defecto 0.03 (argumento xy_tol del launch)
+      yaw_goal_tolerance: __YAW_TOL__      # por defecto 0.05 (argumento yaw_tol del launch)
       stateful: True
     general_goal_checker:
       stateful: True
